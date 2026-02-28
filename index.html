@@ -36,12 +36,13 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   margin-left:10px;
   padding:3px 8px;
   font-size:11px;
-  border:1px solid #333;
-  background:#333;
+  border:1px solid #1976d2;
+  background:#1976d2;
   color:#fff;
   border-radius:4px;
   cursor:pointer;
 }
+.time-btn:hover { background:#125ea6; }
 
 /* ===== 팝업 ===== */
 .popup-overlay {
@@ -67,27 +68,29 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   margin-top:25px;
   padding:8px 20px;
   border:none;
-  background:#333;
+  background:#1976d2;
   color:white;
   border-radius:6px;
   cursor:pointer;
 }
+.popup-box button:hover { background:#125ea6; }
 
 /* ===== 공통 버튼 스타일 (대여/반납/E:ON) ===== */
 .eon-button {
   padding:7px 12px;
   font-size:13px;
-  border:1px solid #222;
-  background:#222;
+  border:1px solid #1976d2;
+  background:#1976d2;
   color:#fff;
   border-radius:6px;
   cursor:pointer;
   transition:0.2s;
 }
-.eon-button:hover:not(:disabled){ background:#000; }
+.eon-button:hover:not(:disabled){ background:#125ea6; }
 .eon-button:disabled {
-  background:#999;
-  border-color:#999;
+  background:#90caf9;
+  border-color:#90caf9;
+  color:#ffffff;
   cursor:not-allowed;
 }
 
