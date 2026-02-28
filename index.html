@@ -73,7 +73,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   cursor:pointer;
 }
 
-/* ===== 공통 버튼 스타일 ===== */
+/* ===== 공통 버튼 스타일 (대여/반납/E:ON) ===== */
 .eon-button {
   padding:7px 12px;
   font-size:13px;
@@ -236,9 +236,6 @@ th, td {
 </div>
 
 <script>
-/* ===== 여기에 너의 Apps Script 웹앱 URL 넣기 ===== */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwRwEZMI7xrRSoQY68wtUS4CooOe8UYq-bPzU1S-hb2nh2_OyAD7gUiaowBhpBGxKc/exec"; // 예: https://script.google.com/macros/s/xxxxx/exec
-
 const today = new Date();
 document.getElementById("todayDate").textContent =
 `(${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')} 기준)`;
@@ -246,238 +243,176 @@ document.getElementById("todayDate").textContent =
 function openPopup(){ document.getElementById("popup").style.display="flex"; }
 function closePopup(){ document.getElementById("popup").style.display="none"; }
 
-/* ===== 상태 ===== */
+/* ===== 학생회 권한 모드 ===== */
 let adminMode = false;
-let adminPw = "";
-let items = [];
-let inventoryMap = {};
 
-/* ===== UI 잠금 ===== */
 function applyAuthUI() {
   const rentBtn  = document.getElementById("rentBtn");
   const loginBtn = document.getElementById("adminLoginBtn");
   const offBtn   = document.getElementById("adminOffBtn");
 
   rentBtn.disabled  = !adminMode;
-  offBtn.disabled   = !adminMode;
-  loginBtn.disabled = adminMode;
+  offBtn.disabled   = !adminMode;   // 접속 전엔 오프도 비활성
+  loginBtn.disabled = adminMode;    // 접속 성공하면 접속 버튼 비활성
 
+  // 입력란도 접속 후에만 사용
   document.getElementById("nameInput").disabled = !adminMode;
   document.getElementById("idInput").disabled   = !adminMode;
   document.getElementById("itemSelect").disabled = !adminMode;
   document.getElementById("numberSelect").disabled = !adminMode;
 }
 
-/* ===== 서버 통신 ===== */
-async function fetchList() {
-  const url = adminMode && adminPw
-    ? `${SCRIPT_URL}?action=list&pw=${encodeURIComponent(adminPw)}`
-    : `${SCRIPT_URL}?action=list`;
-
-  const res = await fetch(url, { method:"GET" });
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || "FETCH_FAILED");
-
-  items = json.items || [];
-
-  inventoryMap = {};
-  items.forEach(it => {
-    const name = it.name;
-    const num = Number(it.number);
-    inventoryMap[name] = Math.max(inventoryMap[name] || 0, num);
-  });
-
-  renderItemOptions();
-  renderTable();
-
-  return json; // ✅ admin 여부 확인을 위해 반환
-}
-
-async function postAction(payload) {
-  const res = await fetch(SCRIPT_URL, {
-    method: "POST",
-    headers: { "Content-Type":"text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  });
-  const json = await res.json();
-  if (!json.ok) throw new Error(json.error || "ACTION_FAILED");
-  return json;
-}
-
-/* ===== E:ON 접속/오프 (접속 즉시 비번 검증) ===== */
-async function adminLogin() {
+function adminLogin() {
   const pw = prompt("비밀번호를 입력하세요");
   if (pw === null) return;
-
-  try {
+  if (pw === "이온") {
     adminMode = true;
-    adminPw = pw;
-    applyAuthUI();
-
-    const json = await fetchList(); // ✅ 여기서 admin true/false 판별
-
-    if (!json.admin) {
-      adminMode = false;
-      adminPw = "";
-      applyAuthUI();
-      renderTable();
-      alert("학생회 임원에게 문의 하세요.");
-      return;
-    }
-  } catch (e) {
-    adminMode = false;
-    adminPw = "";
     applyAuthUI();
     renderTable();
+  } else {
     alert("학생회 임원에게 문의 하세요.");
   }
 }
 
 function adminOff() {
   adminMode = false;
-  adminPw = "";
   applyAuthUI();
-  fetchList().catch(()=>{});
+  renderTable();
 }
 
-/* ===== select 옵션 ===== */
-function renderItemOptions() {
-  const itemSelect = document.getElementById("itemSelect");
-  const current = itemSelect.value;
+/* ===== 재고 데이터 ===== */
+const inventory = {
+  "계산기": 5,
+  "무선키보드": 5,
+  "실험복": 8,
+  "풀": 5,
+  "가위": 2,
+  "자": 3,
+  "화이트": 5
+};
 
-  const names = Object.keys(inventoryMap).sort((a,b)=>a.localeCompare(b,"ko"));
+let items = [];
+let index = 1;
 
-  itemSelect.innerHTML = "";
-  names.forEach(n => {
-    const opt = document.createElement("option");
-    opt.value = n;
-    opt.textContent = n;
-    itemSelect.appendChild(opt);
-  });
-
-  if (current && names.includes(current)) itemSelect.value = current;
-
-  itemSelect.onchange = updateNumbers;
-  updateNumbers();
+for (let name in inventory) {
+  for (let i=1;i<=inventory[name];i++) {
+    items.push({
+      row:index++,
+      name:name,
+      number:i,
+      status:"available",
+      renter:"",
+      studentId:"",
+      rentTime:"",
+      returnTime:""
+    });
+  }
 }
 
-function updateNumbers() {
-  const itemSelect = document.getElementById("itemSelect");
-  const numberSelect = document.getElementById("numberSelect");
-  const selected = itemSelect.value;
+const itemSelect = document.getElementById("itemSelect");
+const numberSelect = document.getElementById("numberSelect");
 
-  numberSelect.innerHTML = "";
-
-  const avail = items
-    .filter(i => i.name === selected && String(i.status) === "available")
-    .map(i => Number(i.number))
-    .sort((a,b)=>a-b);
-
-  avail.forEach(num => {
-    const opt = document.createElement("option");
-    opt.value = num;
-    opt.textContent = num + "번";
-    numberSelect.appendChild(opt);
-  });
+for (let key in inventory) {
+  let opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = key;
+  itemSelect.appendChild(opt);
 }
 
-/* ===== 테이블 렌더 ===== */
-function renderTable() {
+itemSelect.onchange = updateNumbers;
+
+function updateNumbers(){
+  numberSelect.innerHTML="";
+  let selected=itemSelect.value;
+
+  items
+    .filter(i => i.name === selected && i.status === "available")
+    .forEach(i => {
+      let opt = document.createElement("option");
+      opt.value = i.number;
+      opt.textContent = i.number + "번";
+      numberSelect.appendChild(opt);
+    });
+}
+
+function renderTable(){
   const tbody = document.getElementById("itemTable");
   tbody.innerHTML = "";
 
-  items.forEach(item => {
-    const row = tbody.insertRow();
+  items.forEach((item, i) => {
+    let row = tbody.insertRow();
     row.insertCell().textContent = item.row;
     row.insertCell().textContent = item.name;
     row.insertCell().textContent = item.number;
 
-    const statusCell = row.insertCell();
+    let statusCell = row.insertCell();
     statusCell.innerHTML =
-      String(item.status) === "available"
-        ? `<span class="status-available">대여가능</span>`
-        : `<span class="status-rented">대여 중</span>`;
+      item.status === "available"
+      ? `<span class="status-available">대여가능</span>`
+      : `<span class="status-rented">대여 중</span>`;
 
-    row.insertCell().textContent = adminMode ? (item.renter || "") : "";
-    row.insertCell().textContent = adminMode ? (item.studentId || "") : "";
-    row.insertCell().textContent = adminMode ? (item.rentTime || "") : "";
-    row.insertCell().textContent = adminMode ? (item.returnTime || "") : "";
+    // E:ON 접속 전에는 대여자 정보 숨김
+    row.insertCell().textContent = adminMode ? item.renter : "";
+    row.insertCell().textContent = adminMode ? item.studentId : "";
+    row.insertCell().textContent = adminMode ? item.rentTime : "";
+    row.insertCell().textContent = adminMode ? item.returnTime : "";
 
-    const btnCell = row.insertCell();
-    const returnBtn = document.createElement("button");
+    let btnCell = row.insertCell();
+    let returnBtn = document.createElement("button");
     returnBtn.textContent = "반납";
     returnBtn.className = "eon-button";
-    returnBtn.disabled = (String(item.status) === "available") || (!adminMode);
-    returnBtn.onclick = () => returnItem(item.row);
+
+    // E:ON 접속 전엔 반납 불가, available이면 반납 불가
+    returnBtn.disabled = (item.status === "available") || (!adminMode);
+    returnBtn.onclick = () => returnItem(i);
     btnCell.appendChild(returnBtn);
   });
 
   updateNumbers();
 }
 
-/* ===== 대여/반납 ===== */
-async function rentItem() {
+function rentItem(){
   if (!adminMode) return;
 
-  const name = document.getElementById("nameInput").value.trim();
-  const id   = document.getElementById("idInput").value.trim();
-  const itemName = document.getElementById("itemSelect").value;
-  const number = Number(document.getElementById("numberSelect").value);
+  const name = document.getElementById("nameInput").value;
+  const id   = document.getElementById("idInput").value;
+  const itemName = itemSelect.value;
+  const number = Number(numberSelect.value);
 
-  if (!name || !id) return alert("이름과 학번을 입력하세요.");
-  if (!itemName || !number) return alert("대여할 물품/번호를 선택하세요.");
+  if(!name || !id) return alert("이름과 학번을 입력하세요.");
 
-  const target = items.find(i => i.name === itemName && Number(i.number) === number);
-  if (!target) return alert("선택한 물품을 찾을 수 없습니다.");
+  let target = items.find(i => i.name === itemName && i.number === number);
 
-  try {
-    await postAction({ action:"rent", pw: adminPw, row: target.row, renter: name, studentId: id });
+  if(target && target.status === "available"){
+    target.status = "rented";
+    target.renter = name;
+    target.studentId = id;
+    target.rentTime = new Date().toLocaleString();
+    target.returnTime = "";
+    renderTable();
 
     // ✅ 대여 성공 후 입력창 비우기
     document.getElementById("nameInput").value = "";
     document.getElementById("idInput").value = "";
-
-    await fetchList();
-  } catch (e) {
-    const msg = String(e.message || "");
-    if (msg.includes("UNAUTHORIZED")) {
-      alert("학생회 임원에게 문의 하세요.");
-      adminOff();
-      return;
-    }
-    if (msg.includes("ALREADY_RENTED")) return alert("이미 대여 중인 물품입니다.");
-    alert("처리 중 오류가 발생했습니다.");
   }
 }
 
-async function returnItem(rowId) {
+function returnItem(idx){
   if (!adminMode) return;
 
-  try {
-    await postAction({ action:"return", pw: adminPw, row: rowId });
-    await fetchList();
-  } catch (e) {
-    const msg = String(e.message || "");
-    if (msg.includes("UNAUTHORIZED")) {
-      alert("학생회 임원에게 문의 하세요.");
-      adminOff();
-      return;
-    }
-    alert("처리 중 오류가 발생했습니다.");
-  }
+  let item = items[idx];
+  item.status = "available";
+  item.returnTime = new Date().toLocaleString();
+  item.renter = "";
+  item.studentId = "";
+  item.rentTime = "";
+  renderTable();
 }
 
-/* ===== 자동 갱신(공유 핵심) ===== */
+/* 최초 상태: 조회만 가능 */
+renderTable();
 applyAuthUI();
-fetchList().catch(err => console.log(err));
-
-// 5초마다 최신 데이터 갱신
-setInterval(() => {
-  fetchList().catch(()=>{});
-}, 5000);
 </script>
 
 </body>
 </html>
-
-
