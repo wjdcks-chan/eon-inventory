@@ -236,8 +236,8 @@ th, td {
 </div>
 
 <script>
-/* ===== 여기에 너의 웹앱 URL 넣기 ===== */
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbze8UCDVsufgktJlMMHquVx9VyNFkUkvz7GKXetYotytrnTXr9OpATnVp_qlWC2Pw/exec"; // 예: https://script.google.com/macros/s/xxxxx/exec
+/* ===== 여기에 너의 Apps Script 웹앱 URL 넣기 ===== */
+const SCRIPT_URL = "PASTE_YOUR_WEBAPP_URL_HERE"; // 예: https://script.google.com/macros/s/xxxxx/exec
 
 const today = new Date();
 document.getElementById("todayDate").textContent =
@@ -248,9 +248,9 @@ function closePopup(){ document.getElementById("popup").style.display="none"; }
 
 /* ===== 상태 ===== */
 let adminMode = false;
-let adminPw = "";        // E:ON 접속 성공 시 메모리에만 저장
-let items = [];          // 서버에서 받아온 데이터
-let inventoryMap = {};   // 물품별 총 개수(서버 데이터 기반)
+let adminPw = "";
+let items = [];
+let inventoryMap = {};
 
 /* ===== UI 잠금 ===== */
 function applyAuthUI() {
@@ -277,9 +277,9 @@ async function fetchList() {
   const res = await fetch(url, { method:"GET" });
   const json = await res.json();
   if (!json.ok) throw new Error(json.error || "FETCH_FAILED");
+
   items = json.items || [];
 
-  // inventoryMap 갱신(서버 데이터로부터 물품별 최대 번호 추정)
   inventoryMap = {};
   items.forEach(it => {
     const name = it.name;
@@ -289,6 +289,8 @@ async function fetchList() {
 
   renderItemOptions();
   renderTable();
+
+  return json; // ✅ admin 여부 확인을 위해 반환
 }
 
 async function postAction(payload) {
@@ -302,22 +304,31 @@ async function postAction(payload) {
   return json;
 }
 
-/* ===== E:ON 접속/오프 ===== */
+/* ===== E:ON 접속/오프 (접속 즉시 비번 검증) ===== */
 async function adminLogin() {
   const pw = prompt("비밀번호를 입력하세요");
   if (pw === null) return;
 
-  // 서버에 list를 pw 포함으로 한번 요청해 검증
   try {
     adminMode = true;
     adminPw = pw;
     applyAuthUI();
-    await fetchList(); // 여기서 pw가 틀리면 서버는 admin=false로 내려주지만, 우리는 rent/return에서 걸림
-    // rent/return 시 UNAUTHORIZED면 즉시 오프시키는 방식으로 강제
+
+    const json = await fetchList(); // ✅ 여기서 admin true/false 판별
+
+    if (!json.admin) {
+      adminMode = false;
+      adminPw = "";
+      applyAuthUI();
+      renderTable();
+      alert("학생회 임원에게 문의 하세요.");
+      return;
+    }
   } catch (e) {
     adminMode = false;
     adminPw = "";
     applyAuthUI();
+    renderTable();
     alert("학생회 임원에게 문의 하세요.");
   }
 }
@@ -334,7 +345,6 @@ function renderItemOptions() {
   const itemSelect = document.getElementById("itemSelect");
   const current = itemSelect.value;
 
-  // 물품 목록 (inventoryMap 키)
   const names = Object.keys(inventoryMap).sort((a,b)=>a.localeCompare(b,"ko"));
 
   itemSelect.innerHTML = "";
@@ -346,6 +356,7 @@ function renderItemOptions() {
   });
 
   if (current && names.includes(current)) itemSelect.value = current;
+
   itemSelect.onchange = updateNumbers;
   updateNumbers();
 }
@@ -357,7 +368,6 @@ function updateNumbers() {
 
   numberSelect.innerHTML = "";
 
-  // available인 번호만 보여주기
   const avail = items
     .filter(i => i.name === selected && String(i.status) === "available")
     .map(i => Number(i.number))
@@ -376,7 +386,7 @@ function renderTable() {
   const tbody = document.getElementById("itemTable");
   tbody.innerHTML = "";
 
-  items.forEach((item, idx) => {
+  items.forEach(item => {
     const row = tbody.insertRow();
     row.insertCell().textContent = item.row;
     row.insertCell().textContent = item.name;
@@ -388,7 +398,6 @@ function renderTable() {
         ? `<span class="status-available">대여가능</span>`
         : `<span class="status-rented">대여 중</span>`;
 
-    // 비관리자는 개인정보 숨김(서버에서도 비워 내려옴)
     row.insertCell().textContent = adminMode ? (item.renter || "") : "";
     row.insertCell().textContent = adminMode ? (item.studentId || "") : "";
     row.insertCell().textContent = adminMode ? (item.rentTime || "") : "";
@@ -418,25 +427,25 @@ async function rentItem() {
   if (!name || !id) return alert("이름과 학번을 입력하세요.");
   if (!itemName || !number) return alert("대여할 물품/번호를 선택하세요.");
 
-  // 서버 items에서 해당 row 찾기
   const target = items.find(i => i.name === itemName && Number(i.number) === number);
   if (!target) return alert("선택한 물품을 찾을 수 없습니다.");
 
   try {
     await postAction({ action:"rent", pw: adminPw, row: target.row, renter: name, studentId: id });
 
-    // 대여 성공 후 입력창 비우기
+    // ✅ 대여 성공 후 입력창 비우기
     document.getElementById("nameInput").value = "";
     document.getElementById("idInput").value = "";
 
     await fetchList();
   } catch (e) {
-    if (String(e.message).includes("UNAUTHORIZED")) {
+    const msg = String(e.message || "");
+    if (msg.includes("UNAUTHORIZED")) {
       alert("학생회 임원에게 문의 하세요.");
       adminOff();
       return;
     }
-    if (String(e.message).includes("ALREADY_RENTED")) return alert("이미 대여 중인 물품입니다.");
+    if (msg.includes("ALREADY_RENTED")) return alert("이미 대여 중인 물품입니다.");
     alert("처리 중 오류가 발생했습니다.");
   }
 }
@@ -448,7 +457,8 @@ async function returnItem(rowId) {
     await postAction({ action:"return", pw: adminPw, row: rowId });
     await fetchList();
   } catch (e) {
-    if (String(e.message).includes("UNAUTHORIZED")) {
+    const msg = String(e.message || "");
+    if (msg.includes("UNAUTHORIZED")) {
       alert("학생회 임원에게 문의 하세요.");
       adminOff();
       return;
@@ -457,11 +467,11 @@ async function returnItem(rowId) {
   }
 }
 
-/* ===== 자동 갱신 (공유 핵심) ===== */
+/* ===== 자동 갱신(공유 핵심) ===== */
 applyAuthUI();
 fetchList().catch(err => console.log(err));
 
-// 5초마다 서버에서 최신 데이터로 갱신
+// 5초마다 최신 데이터 갱신
 setInterval(() => {
   fetchList().catch(()=>{});
 }, 5000);
