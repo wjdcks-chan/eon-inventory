@@ -281,12 +281,15 @@ function adminOff() {
 }
 
 /* ===== (변경) JSONP 연동 설정 ===== */
-const GAS_URL = "https://script.google.com/macros/s/AKfycbxV_oRGfPECotB5RCDc871ej5bdxd7T5DT16FybSkfjBCBcXgqi5YFhtHHvW-1omDlGtA/exec"; // 너가 나중에 주소 넣는 자리
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxV_oRGfPECotB5RCDc871ej5bdxd7T5DT16FybSkfjBCBcXgqi5YFhtHHvW-1omDlGtA/exec";
 const POLL_MS = 5000; // 실시간 반영(폴링)
 
 /* ===== (변경) items / inventory는 시트에서 로드 ===== */
 let items = [];
 let inventory = {};
+
+/* (추가) 품목 목록이 바뀔 때만 select를 재구성하기 위한 시그니처 */
+let inventoryKeysSig = "";
 
 const itemSelect = document.getElementById("itemSelect");
 const numberSelect = document.getElementById("numberSelect");
@@ -334,30 +337,64 @@ async function fetchItems() {
   });
 }
 
+/* ===== (수정) 품목 선택 유지 + 목록이 바뀔 때만 재구성 ===== */
 function rebuildItemSelect() {
+  const prevItem = itemSelect.value || "";
+  const prevNumber = numberSelect.value || "";
+
+  const keys = Object.keys(inventory);
+  const sig = keys.join("|");
+
+  // 품목 목록이 동일하면 select를 통째로 재생성하지 않음 (선택 튐 방지)
+  if (sig === inventoryKeysSig && itemSelect.options.length > 0) {
+    updateNumbersPreserve(prevNumber);
+    return;
+  }
+
+  inventoryKeysSig = sig;
+
   itemSelect.innerHTML = "";
-  Object.keys(inventory).forEach(key => {
+  keys.forEach(key => {
     let opt = document.createElement("option");
     opt.value = key;
     opt.textContent = key;
     itemSelect.appendChild(opt);
   });
+
+  // 이전 선택 복원(가능한 경우)
+  if (prevItem && keys.includes(prevItem)) {
+    itemSelect.value = prevItem;
+  }
+
+  updateNumbersPreserve(prevNumber);
 }
 
 itemSelect.onchange = updateNumbers;
 
-function updateNumbers() {
+/* ===== (수정) 번호 선택도 가능한 경우 유지 ===== */
+function updateNumbersPreserve(prevNumber = "") {
   numberSelect.innerHTML = "";
-  let selected = itemSelect.value;
+  const selected = itemSelect.value;
 
-  items
+  const availableNumbers = items
     .filter(i => i.name === selected && i.status === "available")
-    .forEach(i => {
-      let opt = document.createElement("option");
-      opt.value = i.number;
-      opt.textContent = i.number + "번";
-      numberSelect.appendChild(opt);
-    });
+    .map(i => String(i.number));
+
+  availableNumbers.forEach(numStr => {
+    let opt = document.createElement("option");
+    opt.value = numStr;
+    opt.textContent = numStr + "번";
+    numberSelect.appendChild(opt);
+  });
+
+  // 이전 번호가 아직 available이면 유지
+  if (prevNumber && availableNumbers.includes(String(prevNumber))) {
+    numberSelect.value = String(prevNumber);
+  }
+}
+
+function updateNumbers() {
+  updateNumbersPreserve(numberSelect.value);
 }
 
 /* ===== (변경) 대여/반납은 JSONP로 반영 ===== */
@@ -490,6 +527,3 @@ boot();
 
 </body>
 </html>
-
-
-
