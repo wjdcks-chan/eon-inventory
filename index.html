@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>학생회 물품 대여 장부</title>
+
+<style>
+body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
+
+.top-section { background:#87CEFA1A; padding:30px 0; }
+.inner { max-width:1100px; margin:0 auto; padding:0 30px; }
+
+.header-title { position:relative; margin-bottom:15px; }
+.header-title h1 { margin:0; font-size:28px; font-weight:bold; text-align:center; }
+.header-title span {
+  position:absolute; right:0; top:50%;
+  transform:translateY(-50%);
+  font-size:13px; color:#666;
+}
+
+.banner { width:100%; margin:15px 0; }
+.banner img { width:100%; height:auto; display:block; }
+
+.notice-box {
+  background:#ffffff;
+  border:1px solid #ddd;
+  padding:8px 12px;
+  font-size:12px;
+  line-height:1.3;
+}
+.notice-box p { margin:2px 0; }
+
+.time-btn {
+  margin-left:10px;
+  padding:3px 8px;
+  font-size:11px;
+  border:1px solid #333;
+  background:#333;
+  color:#fff;
+  border-radius:4px;
+  cursor:pointer;
+}
+
+.popup-overlay {
+  position:fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:rgba(0,0,0,0.5);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  z-index:9999;
+}
+
+.popup-box {
+  background:#ffffff;
+  width:420px;
+  padding:30px 25px;
+  border-radius:10px;
+  text-align:center;
+}
+
+.popup-box button {
+  margin-top:25px;
+  padding:8px 20px;
+  border:none;
+  background:#333;
+  color:white;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+/* ===== 대여 시스템 ===== */
+
+.form-area { margin-top:25px; }
+
+select, input, button {
+  padding:6px;
+  margin-right:8px;
+  font-size:14px;
+}
+
+/* ===== 테이블 ===== */
+
+.table-wrap {
+  width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+
+table {
+  width:100%;
+  min-width:860px;
+  border-collapse:collapse;
+  margin-top:20px;
+  font-size:13px;
+}
+
+th, td {
+  border:1px solid #ccc;
+  padding:6px 8px;
+  text-align:center;
+  white-space:nowrap;
+}
+
+.status-available {
+  background:#1f6f2f;
+  color:white;
+  padding:3px 8px;
+  border-radius:12px;
+  font-size:12px;
+}
+
+.status-rented {
+  background:#b00020;
+  color:white;
+  padding:3px 8px;
+  border-radius:12px;
+  font-size:12px;
+}
+
+button:disabled {
+  opacity:0.4;
+  cursor:not-allowed;
+}
+
+/* ===== 모바일 대응 ===== */
+
+@media (max-width: 768px) {
+
+  .inner { padding:0 14px; }
+  .top-section { padding:18px 0; }
+
+  .header-title h1 { font-size:22px; }
+  .header-title span {
+    position:static;
+    transform:none;
+    display:block;
+    text-align:right;
+    margin-top:6px;
+  }
+
+  .banner img {
+    max-height:140px;
+    object-fit:cover;
+  }
+
+  .form-area {
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .form-area select,
+  .form-area input {
+    flex:1 1 140px;
+    min-width:140px;
+    margin-right:0;
+  }
+
+  .form-area button {
+    margin-right:0;
+  }
+
+  th, td {
+    font-size:12px;
+    padding:6px;
+  }
+
+  .status-available,
+  .status-rented {
+    font-size:11px;
+    padding:2px 8px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="popup-overlay" id="popup">
+  <div class="popup-box">
+    <h2>공지사항</h2>
+    <p><strong>물품 대여 시간: 10시 ~ 17시</strong></p>
+    <p><strong>반납 가능 시간: 10시 ~ 18시</strong></p>
+    <br>
+    <p><strong>반납은 반드시 학생회 담당자의 확인 후에 처리됩니다</strong></p>
+    <button onclick="closePopup()">확인</button>
+  </div>
+</div>
+
+<div class="top-section">
+  <div class="inner">
+
+    <div class="header-title">
+      <h1>학생회 물품 대여 장부</h1>
+      <span id="todayDate"></span>
+    </div>
+
+    <div class="banner">
+      <img src="eon-banner.jpg" alt="학생회 배너">
+    </div>
+
+    <div class="notice-box">
+      <p>
+        ✓ 물품 대여는 <strong>운영 시간 내에</strong> 가능합니다.
+        <button class="time-btn" onclick="openPopup()">운영시간 확인</button>
+      </p>
+      <p>✓ 물품 반납 또한 <strong>대여 당일 운영 시간 내</strong>에 부탁드립니다.</p>
+      <p>✓ 반납은 <strong>반드시 학생회 담당자의 확인</strong>이 필요합니다.</p>
+      <p>※ 대여물품 재고 현황 조회를 위한 페이지입니다. 대여 및 반납은 <strong>학생회 상주 인원에게 문의</strong>해 주세요.</p>
+    </div>
+
+    <div class="form-area">
+      <select id="itemSelect"></select>
+      <select id="numberSelect"></select>
+      <input type="text" id="nameInput" placeholder="이름" maxlength="5">
+      <input type="text" id="idInput" placeholder="학번" maxlength="9">
+      <button onclick="rentItem()">대여하기</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>번호</th>
+            <th>물품</th>
+            <th>물품번호</th>
+            <th>상태</th>
+            <th>이름</th>
+            <th>학번</th>
+            <th>대여 시간</th>
+            <th>반납 시간</th>
+            <th>반납</th>
+          </tr>
+        </thead>
+        <tbody id="itemTable"></tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const today = new Date();
+document.getElementById("todayDate").textContent =
+`(${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')} 기준)`;
+
+function openPopup(){ document.getElementById("popup").style.display="flex"; }
+function closePopup(){ document.getElementById("popup").style.display="none"; }
+
+const inventory = {
+  "계산기": 5,
+  "무선키보드": 5,
+  "실험복": 8,
+  "풀": 5,
+  "가위": 2,
+  "자": 3,
+  "화이트": 5
+};
+
+let items = [];
+let index = 1;
+
+for (let name in inventory) {
+  for (let i=1;i<=inventory[name];i++) {
+    items.push({
+      row:index++,
+      name:name,
+      number:i,
+      status:"available",
+      renter:"",
+      studentId:"",
+      rentTime:"",
+      returnTime:""
+    });
+  }
+}
+
+const itemSelect = document.getElementById("itemSelect");
+const numberSelect = document.getElementById("numberSelect");
+
+for (let key in inventory) {
+  let opt = document.createElement("option");
+  opt.value = key;
+  opt.textContent = key;
+  itemSelect.appendChild(opt);
+}
+
+itemSelect.onchange = updateNumbers;
+
+function updateNumbers(){
+  numberSelect.innerHTML="";
+  let selected=itemSelect.value;
+  items.filter(i=>i.name===selected && i.status==="available")
+       .forEach(i=>{
+         let opt=document.createElement("option");
+         opt.value=i.number;
+         opt.textContent=i.number+"번";
+         numberSelect.appendChild(opt);
+       });
+}
+updateNumbers();
+
+function renderTable(){
+  const tbody=document.getElementById("itemTable");
+  tbody.innerHTML="";
+
+  items.forEach((item,i)=>{
+    let row=tbody.insertRow();
+    row.insertCell().textContent=item.row;
+    row.insertCell().textContent=item.name;
+    row.insertCell().textContent=item.number;
+
+    let statusCell=row.insertCell();
+    statusCell.innerHTML=
+      item.status==="available"
+      ? `<span class="status-available">대여가능</span>`
+      : `<span class="status-rented">대여 중</span>`;
+
+    row.insertCell().textContent=item.renter;
+    row.insertCell().textContent=item.studentId;
+    row.insertCell().textContent=item.rentTime;
+    row.insertCell().textContent=item.returnTime;
+
+    let btn=row.insertCell();
+    let returnBtn=document.createElement("button");
+    returnBtn.textContent="반납";
+    returnBtn.disabled=item.status==="available";
+    returnBtn.onclick=()=>returnItem(i);
+    btn.appendChild(returnBtn);
+  });
+
+  updateNumbers();
+}
+renderTable();
+
+function rentItem(){
+  const name=document.getElementById("nameInput").value;
+  const id=document.getElementById("idInput").value;
+  const itemName=itemSelect.value;
+  const number=Number(numberSelect.value);
+
+  if(!name||!id) return alert("이름과 학번을 입력하세요.");
+
+  let target=items.find(i=>i.name===itemName&&i.number===number);
+
+  if(target&&target.status==="available"){
+    target.status="rented";
+    target.renter=name;
+    target.studentId=id;
+    target.rentTime=new Date().toLocaleString();
+    target.returnTime="";
+    renderTable();
+  }
+}
+
+function returnItem(index){
+  let item=items[index];
+  item.status="available";
+  item.returnTime=new Date().toLocaleString();
+  item.renter="";
+  item.studentId="";
+  item.rentTime="";
+  renderTable();
+}
+</script>
+
+</body>
+</html>
