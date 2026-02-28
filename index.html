@@ -280,43 +280,40 @@ function adminOff() {
   renderTable();
 }
 
-/* ===== 재고 데이터 ===== */
-const inventory = {
-  "계산기": 5,
-  "무선키보드": 5,
-  "실험복": 8,
-  "풀": 5,
-  "가위": 2,
-  "자": 3,
-  "화이트": 5
-};
+/* ===== (추가) Apps Script 연동 설정 ===== */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbwONiynY9X_O7U-Qi7CQbJoqArMqOAyBW6T355lqMnHgAFo3ynp0yntkH-kjDuYwmGVcQ/exec"; // 너가 나중에 주소 넣는 자리
+const POLL_MS = 5000; // 실시간 반영(폴링)
 
+/* ===== (변경) items / inventory는 시트에서 로드 ===== */
 let items = [];
-let index = 1;
-
-for (let name in inventory) {
-  for (let i=1;i<=inventory[name];i++) {
-    items.push({
-      row:index++,
-      name:name,
-      number:i,
-      status:"available",
-      renter:"",
-      studentId:"",
-      rentTime:"",
-      returnTime:""
-    });
-  }
-}
+let inventory = {};
 
 const itemSelect = document.getElementById("itemSelect");
 const numberSelect = document.getElementById("numberSelect");
 
-for (let key in inventory) {
-  let opt = document.createElement("option");
-  opt.value = key;
-  opt.textContent = key;
-  itemSelect.appendChild(opt);
+async function fetchItems(){
+  const res = await fetch(GAS_URL, { method:"GET" });
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || "fetch_failed");
+
+  items = data.items || [];
+
+  // 품목별 수량(inventory) 재구성: number의 최대값을 수량으로 간주
+  inventory = {};
+  items.forEach(it => {
+    const n = Number(it.number);
+    inventory[it.name] = Math.max(inventory[it.name] || 0, n);
+  });
+}
+
+function rebuildItemSelect(){
+  itemSelect.innerHTML = "";
+  Object.keys(inventory).forEach(key => {
+    const opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = key;
+    itemSelect.appendChild(opt);
+  });
 }
 
 itemSelect.onchange = updateNumbers;
@@ -333,6 +330,18 @@ function updateNumbers(){
       opt.textContent = i.number + "번";
       numberSelect.appendChild(opt);
     });
+}
+
+/* ===== (추가) 대여/반납 서버 반영 ===== */
+async function postAction(payload){
+  const res = await fetch(GAS_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body: JSON.stringify(payload)
+  });
+  const data = await res.json();
+  if(!data.ok) throw new Error(data.error || "post_failed");
+  items = data.items || items;
 }
 
 function renderTable(){
@@ -371,7 +380,7 @@ function renderTable(){
   updateNumbers();
 }
 
-function rentItem(){
+async function rentItem(){
   if (!adminMode) return;
 
   const name = document.getElementById("nameInput").value;
@@ -381,37 +390,83 @@ function rentItem(){
 
   if(!name || !id) return alert("이름과 학번을 입력하세요.");
 
-  let target = items.find(i => i.name === itemName && i.number === number);
+  try {
+    await postAction({
+      action: "rent",
+      name: itemName,
+      number: number,
+      renter: name,
+      studentId: id
+    });
 
-  if(target && target.status === "available"){
-    target.status = "rented";
-    target.renter = name;
-    target.studentId = id;
-    target.rentTime = new Date().toLocaleString();
-    target.returnTime = "";
     renderTable();
 
     // ✅ 대여 성공 후 입력창 비우기
     document.getElementById("nameInput").value = "";
     document.getElementById("idInput").value = "";
+  } catch (e) {
+    alert("처리 실패: " + (e.message || e));
+    // 실패 시 최신 상태 다시 로드
+    try {
+      await fetchItems();
+      rebuildItemSelect();
+      updateNumbers();
+      renderTable();
+    } catch(_) {}
   }
 }
 
-function returnItem(idx){
+async function returnItem(idx){
   if (!adminMode) return;
 
   let item = items[idx];
-  item.status = "available";
-  item.returnTime = new Date().toLocaleString();
-  item.renter = "";
-  item.studentId = "";
-  item.rentTime = "";
-  renderTable();
+
+  try {
+    await postAction({
+      action: "return",
+      name: item.name,
+      number: Number(item.number)
+    });
+
+    renderTable();
+  } catch (e) {
+    alert("처리 실패: " + (e.message || e));
+    try {
+      await fetchItems();
+      rebuildItemSelect();
+      updateNumbers();
+      renderTable();
+    } catch(_) {}
+  }
 }
 
-/* 최초 상태: 조회만 가능 */
-renderTable();
-applyAuthUI();
+/* ===== (변경) 최초 로딩 + 실시간 폴링 ===== */
+async function boot(){
+  applyAuthUI();
+
+  try {
+    await fetchItems();
+    rebuildItemSelect();
+    updateNumbers();
+    renderTable();
+  } catch (e) {
+    // 주소 미입력/배포 문제 등일 때도 페이지 자체는 떠야 하니까 조용히 처리
+    // 필요하면 콘솔 확인
+    console.error(e);
+  }
+
+  setInterval(async () => {
+    try {
+      await fetchItems();
+      // 품목 구조가 바뀌었을 수 있으니 select도 재구성
+      rebuildItemSelect();
+      updateNumbers();
+      renderTable();
+    } catch(e) {}
+  }, POLL_MS);
+}
+
+boot();
 </script>
 
 </body>
