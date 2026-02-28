@@ -81,6 +81,32 @@ select, input, button {
   font-size:14px;
 }
 
+.admin-btn {
+  padding:6px 10px;
+  font-size:13px;
+  border:1px solid #333;
+  background:#333;
+  color:#fff;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.admin-off-btn {
+  padding:6px 10px;
+  font-size:13px;
+  border:1px solid #666;
+  background:#666;
+  color:#fff;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.admin-btn:disabled,
+.admin-off-btn:disabled {
+  opacity:0.4;
+  cursor:not-allowed;
+}
+
 /* ===== 테이블 ===== */
 
 .table-wrap {
@@ -217,7 +243,10 @@ button:disabled {
       <select id="numberSelect"></select>
       <input type="text" id="nameInput" placeholder="이름" maxlength="5">
       <input type="text" id="idInput" placeholder="학번" maxlength="9">
-      <button onclick="rentItem()">대여하기</button>
+      <button id="rentBtn" onclick="rentItem()">대여하기</button>
+
+      <button id="adminLoginBtn" class="admin-btn" onclick="adminLogin()">E:ON 접속</button>
+      <button id="adminOffBtn" class="admin-off-btn" onclick="adminOff()">E:ON 오프</button>
     </div>
 
     <div class="table-wrap">
@@ -250,6 +279,42 @@ document.getElementById("todayDate").textContent =
 function openPopup(){ document.getElementById("popup").style.display="flex"; }
 function closePopup(){ document.getElementById("popup").style.display="none"; }
 
+/* ===== 학생회 권한 모드 ===== */
+let adminMode = false;
+
+function applyAuthUI() {
+  const rentBtn = document.getElementById("rentBtn");
+  const offBtn  = document.getElementById("adminOffBtn");
+
+  rentBtn.disabled = !adminMode;
+  offBtn.disabled  = !adminMode;
+
+  // 입력칸도 학생회 모드에서만 의미 있으니 같이 잠금(요구사항엔 버튼만이지만 UX상 안전)
+  document.getElementById("nameInput").disabled = !adminMode;
+  document.getElementById("idInput").disabled   = !adminMode;
+  document.getElementById("itemSelect").disabled = !adminMode;
+  document.getElementById("numberSelect").disabled = !adminMode;
+}
+
+function adminLogin() {
+  const pw = prompt("비밀번호를 입력하세요");
+  if (pw === null) return; // 취소
+  if (pw === "이온") {
+    adminMode = true;
+    applyAuthUI();
+    renderTable();
+  } else {
+    alert("학생회 임원에게 문의 하세요.");
+  }
+}
+
+function adminOff() {
+  adminMode = false;
+  applyAuthUI();
+  renderTable();
+}
+
+/* ===== 기존 로직 동일 ===== */
 const inventory = {
   "계산기": 5,
   "무선키보드": 5,
@@ -319,15 +384,21 @@ function renderTable(){
       ? `<span class="status-available">대여가능</span>`
       : `<span class="status-rented">대여 중</span>`;
 
-    row.insertCell().textContent=item.renter;
-    row.insertCell().textContent=item.studentId;
-    row.insertCell().textContent=item.rentTime;
-    row.insertCell().textContent=item.returnTime;
+    // ===== E:ON 접속 전에는 대여자 정보 숨김 =====
+    row.insertCell().textContent = adminMode ? item.renter : "";
+    row.insertCell().textContent = adminMode ? item.studentId : "";
+    row.insertCell().textContent = adminMode ? item.rentTime : "";
+    row.insertCell().textContent = adminMode ? item.returnTime : "";
 
+    // ===== 반납 버튼: E:ON 접속 전에는 항상 비활성화 =====
     let btn=row.insertCell();
     let returnBtn=document.createElement("button");
     returnBtn.textContent="반납";
-    returnBtn.disabled=item.status==="available";
+
+    // 원래 로직: available이면 비활성화
+    // 추가 요구: adminMode 아니면 rented여도 비활성화
+    returnBtn.disabled = (item.status==="available") || (!adminMode);
+
     returnBtn.onclick=()=>returnItem(i);
     btn.appendChild(returnBtn);
   });
@@ -337,6 +408,8 @@ function renderTable(){
 renderTable();
 
 function rentItem(){
+  if (!adminMode) return; // 안전장치
+
   const name=document.getElementById("nameInput").value;
   const id=document.getElementById("idInput").value;
   const itemName=itemSelect.value;
@@ -357,6 +430,8 @@ function rentItem(){
 }
 
 function returnItem(index){
+  if (!adminMode) return; // 안전장치
+
   let item=items[index];
   item.status="available";
   item.returnTime=new Date().toLocaleString();
@@ -365,6 +440,9 @@ function returnItem(index){
   item.rentTime="";
   renderTable();
 }
+
+/* 최초 상태: 조회만 가능 */
+applyAuthUI();
 </script>
 
 </body>
