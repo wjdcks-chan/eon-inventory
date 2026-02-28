@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>이과대학 대여물품 재고 현황 장부</title>
+<title>학생회 물품 대여 장부</title>
 
 <style>
 body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
@@ -73,7 +73,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   cursor:pointer;
 }
 
-/* ===== 공통 버튼 스타일 ===== */
+/* ===== 공통 버튼 스타일 (대여/반납/E:ON) ===== */
 .eon-button {
   padding:7px 12px;
   font-size:13px;
@@ -84,11 +84,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   cursor:pointer;
   transition:0.2s;
 }
-
-.eon-button:hover:not(:disabled){
-  background:#000;
-}
-
+.eon-button:hover:not(:disabled){ background:#000; }
 .eon-button:disabled {
   background:#999;
   border-color:#999;
@@ -104,6 +100,7 @@ select, input {
   font-size:14px;
 }
 
+/* ===== 테이블 ===== */
 .table-wrap {
   width:100%;
   overflow-x:auto;
@@ -141,9 +138,28 @@ th, td {
   font-size:12px;
 }
 
-@media (max-width:768px){
+/* ===== 모바일 대응 ===== */
+@media (max-width: 768px) {
   .inner { padding:0 14px; }
+  .top-section { padding:18px 0; }
+
   .header-title h1 { font-size:22px; }
+  .header-title span {
+    position:static;
+    transform:none;
+    display:block;
+    text-align:right;
+    margin-top:6px;
+  }
+
+  .banner img { max-height:140px; object-fit:cover; }
+
+  .form-area { display:flex; flex-wrap:wrap; gap:8px; }
+  .form-area select, .form-area input { margin-right:0; flex:1 1 140px; min-width:140px; }
+  .form-area button { margin-right:0; }
+
+  th, td { font-size:12px; padding:6px; }
+  .status-available, .status-rented { font-size:11px; padding:2px 8px; }
 }
 </style>
 </head>
@@ -166,7 +182,7 @@ th, td {
   <div class="inner">
 
     <div class="header-title">
-      <h1>이과대 대여물품 재고 현황 장부</h1>
+      <h1>학생회 물품 대여 장부</h1>
       <span id="todayDate"></span>
     </div>
 
@@ -227,18 +243,19 @@ document.getElementById("todayDate").textContent =
 function openPopup(){ document.getElementById("popup").style.display="flex"; }
 function closePopup(){ document.getElementById("popup").style.display="none"; }
 
-/* 이하 로직 동일 (E:ON 기능 포함) */
+/* ===== 학생회 권한 모드 ===== */
 let adminMode = false;
 
 function applyAuthUI() {
-  const rentBtn = document.getElementById("rentBtn");
+  const rentBtn  = document.getElementById("rentBtn");
   const loginBtn = document.getElementById("adminLoginBtn");
-  const offBtn  = document.getElementById("adminOffBtn");
+  const offBtn   = document.getElementById("adminOffBtn");
 
-  rentBtn.disabled = !adminMode;
-  offBtn.disabled  = !adminMode;
-  loginBtn.disabled = adminMode;
+  rentBtn.disabled  = !adminMode;
+  offBtn.disabled   = !adminMode;   // 접속 전엔 오프도 비활성
+  loginBtn.disabled = adminMode;    // 접속 성공하면 접속 버튼 비활성
 
+  // 입력란도 접속 후에만 사용
   document.getElementById("nameInput").disabled = !adminMode;
   document.getElementById("idInput").disabled   = !adminMode;
   document.getElementById("itemSelect").disabled = !adminMode;
@@ -247,11 +264,12 @@ function applyAuthUI() {
 
 function adminLogin() {
   const pw = prompt("비밀번호를 입력하세요");
+  if (pw === null) return;
   if (pw === "이온") {
     adminMode = true;
     applyAuthUI();
     renderTable();
-  } else if (pw !== null) {
+  } else {
     alert("학생회 임원에게 문의 하세요.");
   }
 }
@@ -262,6 +280,7 @@ function adminOff() {
   renderTable();
 }
 
+/* ===== 재고 데이터 ===== */
 const inventory = {
   "계산기": 5,
   "무선키보드": 5,
@@ -305,43 +324,48 @@ itemSelect.onchange = updateNumbers;
 function updateNumbers(){
   numberSelect.innerHTML="";
   let selected=itemSelect.value;
-  items.filter(i=>i.name===selected && i.status==="available")
-       .forEach(i=>{
-         let opt=document.createElement("option");
-         opt.value=i.number;
-         opt.textContent=i.number+"번";
-         numberSelect.appendChild(opt);
-       });
+
+  items
+    .filter(i => i.name === selected && i.status === "available")
+    .forEach(i => {
+      let opt = document.createElement("option");
+      opt.value = i.number;
+      opt.textContent = i.number + "번";
+      numberSelect.appendChild(opt);
+    });
 }
 
 function renderTable(){
-  const tbody=document.getElementById("itemTable");
-  tbody.innerHTML="";
+  const tbody = document.getElementById("itemTable");
+  tbody.innerHTML = "";
 
-  items.forEach((item,i)=>{
-    let row=tbody.insertRow();
-    row.insertCell().textContent=item.row;
-    row.insertCell().textContent=item.name;
-    row.insertCell().textContent=item.number;
+  items.forEach((item, i) => {
+    let row = tbody.insertRow();
+    row.insertCell().textContent = item.row;
+    row.insertCell().textContent = item.name;
+    row.insertCell().textContent = item.number;
 
-    let statusCell=row.insertCell();
-    statusCell.innerHTML=
-      item.status==="available"
+    let statusCell = row.insertCell();
+    statusCell.innerHTML =
+      item.status === "available"
       ? `<span class="status-available">대여가능</span>`
       : `<span class="status-rented">대여 중</span>`;
 
+    // E:ON 접속 전에는 대여자 정보 숨김
     row.insertCell().textContent = adminMode ? item.renter : "";
     row.insertCell().textContent = adminMode ? item.studentId : "";
     row.insertCell().textContent = adminMode ? item.rentTime : "";
     row.insertCell().textContent = adminMode ? item.returnTime : "";
 
-    let btn=row.insertCell();
-    let returnBtn=document.createElement("button");
-    returnBtn.textContent="반납";
-    returnBtn.className="eon-button";
-    returnBtn.disabled = (item.status==="available") || (!adminMode);
-    returnBtn.onclick=()=>returnItem(i);
-    btn.appendChild(returnBtn);
+    let btnCell = row.insertCell();
+    let returnBtn = document.createElement("button");
+    returnBtn.textContent = "반납";
+    returnBtn.className = "eon-button";
+
+    // E:ON 접속 전엔 반납 불가, available이면 반납 불가
+    returnBtn.disabled = (item.status === "available") || (!adminMode);
+    returnBtn.onclick = () => returnItem(i);
+    btnCell.appendChild(returnBtn);
   });
 
   updateNumbers();
@@ -350,41 +374,45 @@ function renderTable(){
 function rentItem(){
   if (!adminMode) return;
 
-  const name=document.getElementById("nameInput").value;
-  const id=document.getElementById("idInput").value;
-  const itemName=itemSelect.value;
-  const number=Number(numberSelect.value);
+  const name = document.getElementById("nameInput").value;
+  const id   = document.getElementById("idInput").value;
+  const itemName = itemSelect.value;
+  const number = Number(numberSelect.value);
 
-  if(!name||!id) return alert("이름과 학번을 입력하세요.");
+  if(!name || !id) return alert("이름과 학번을 입력하세요.");
 
-  let target=items.find(i=>i.name===itemName&&i.number===number);
+  let target = items.find(i => i.name === itemName && i.number === number);
 
-  if(target&&target.status==="available"){
-    target.status="rented";
-    target.renter=name;
-    target.studentId=id;
-    target.rentTime=new Date().toLocaleString();
-    target.returnTime="";
+  if(target && target.status === "available"){
+    target.status = "rented";
+    target.renter = name;
+    target.studentId = id;
+    target.rentTime = new Date().toLocaleString();
+    target.returnTime = "";
     renderTable();
+
+    // ✅ 대여 성공 후 입력창 비우기
+    document.getElementById("nameInput").value = "";
+    document.getElementById("idInput").value = "";
   }
 }
 
-function returnItem(index){
+function returnItem(idx){
   if (!adminMode) return;
 
-  let item=items[index];
-  item.status="available";
-  item.returnTime=new Date().toLocaleString();
-  item.renter="";
-  item.studentId="";
-  item.rentTime="";
+  let item = items[idx];
+  item.status = "available";
+  item.returnTime = new Date().toLocaleString();
+  item.renter = "";
+  item.studentId = "";
+  item.rentTime = "";
   renderTable();
 }
 
+/* 최초 상태: 조회만 가능 */
 renderTable();
 applyAuthUI();
 </script>
 
 </body>
 </html>
-
