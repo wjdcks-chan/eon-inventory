@@ -29,7 +29,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   padding:8px 12px;
   font-size:12px;
   line-height:1.3;
-  margin-bottom:10px;   /* 간격 축소 */
+  margin-bottom:10px;
 }
 .notice-box p { margin:2px 0; }
 
@@ -75,7 +75,6 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   cursor:pointer;
 }
 .popup-box button:hover { background:#125ea6; }
-
 .popup-box p.tight { margin:2px 0; }
 
 /* ===== 공통 버튼 ===== */
@@ -88,7 +87,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   border-radius:6px;
   cursor:pointer;
   transition:0.2s;
-  height:36px;             /* 높이 고정 */
+  height:36px;
   display:flex;
   align-items:center;
   justify-content:center;
@@ -102,7 +101,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
 
 /* ===== 입력 영역 ===== */
 .form-area {
-  margin-top:5px;          /* 위 여백 축소 */
+  margin-top:5px;
   display:flex;
   align-items:center;
   gap:8px;
@@ -115,7 +114,7 @@ select, input {
   height:36px;
 }
 
-/* ===== SNS 버튼 (기존 버튼과 동일 규격) ===== */
+/* ===== SNS 버튼 ===== */
 .sns-btn {
   width:36px;
   height:36px;
@@ -128,38 +127,31 @@ select, input {
   cursor:pointer;
   transition:0.2s;
 }
-
 .sns-btn img {
   width:22px;
   height:22px;
   object-fit:contain;
 }
-
-.sns-btn:hover {
-  transform:scale(1.05);
-}
+.sns-btn:hover { transform:scale(1.05); }
 
 /* ===== 테이블 ===== */
 .table-wrap {
   width:100%;
   overflow-x:auto;
-  margin-top:10px;   /* 간격 축소 */
+  margin-top:10px;
 }
-
 table {
   width:100%;
   min-width:860px;
   border-collapse:collapse;
   font-size:13px;
 }
-
 th, td {
   border:1px solid #ccc;
   padding:6px 8px;
   text-align:center;
   white-space:nowrap;
 }
-
 .status-available {
   background:#1f6f2f;
   color:white;
@@ -167,7 +159,6 @@ th, td {
   border-radius:12px;
   font-size:12px;
 }
-
 .status-rented {
   background:#b00020;
   color:white;
@@ -179,6 +170,19 @@ th, td {
 </head>
 
 <body>
+
+<!-- ===== 팝업 ===== -->
+<div class="popup-overlay" id="popup">
+  <div class="popup-box">
+    <h2>공지사항</h2>
+    <p><strong>물품 대여 시간: 10시 ~ 17시</strong></p>
+    <p><strong>반납 가능 시간: 10시 ~ 18시</strong></p>
+    <br>
+    <p class="tight"><strong>원활한 물품 관리를 위해 반납은 학생회의 확인이 필요합니다.</strong></p>
+    <p class="tight"><strong>운영 시간을 준수해 주세요.</strong></p>
+    <button onclick="closePopup()">확인</button>
+  </div>
+</div>
 
 <div class="top-section">
 <div class="inner">
@@ -252,6 +256,121 @@ th, td {
 const today = new Date();
 document.getElementById("todayDate").textContent =
 `(${today.getFullYear()}.${String(today.getMonth()+1).padStart(2,'0')}.${String(today.getDate()).padStart(2,'0')} 기준)`;
+
+function openPopup(){ document.getElementById("popup").style.display="flex"; }
+function closePopup(){ document.getElementById("popup").style.display="none"; }
+
+let adminMode = false;
+
+function applyAuthUI() {
+  rentBtn.disabled  = !adminMode;
+  adminOffBtn.disabled   = !adminMode;
+  adminLoginBtn.disabled = adminMode;
+
+  nameInput.disabled = !adminMode;
+  idInput.disabled   = !adminMode;
+  itemSelect.disabled = !adminMode;
+  numberSelect.disabled = !adminMode;
+}
+
+function adminLogin() {
+  const pw = prompt("비밀번호를 입력하세요");
+  if (pw === "이온") {
+    adminMode = true;
+    applyAuthUI();
+    renderTable();
+  } else if (pw !== null) {
+    alert("학생회 임원에게 문의 하세요.");
+  }
+}
+
+function adminOff() {
+  adminMode = false;
+  applyAuthUI();
+  renderTable();
+}
+
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxV_oRGfPECotB5RCDc871ej5bdxd7T5DT16FybSkfjBCBcXgqi5YFhtHHvW-1omDlGtA/exec";
+const POLL_MS = 5000;
+
+let items = [];
+let inventory = {};
+let inventoryKeysSig = "";
+
+const itemSelect = document.getElementById("itemSelect");
+const numberSelect = document.getElementById("numberSelect");
+const rentBtn = document.getElementById("rentBtn");
+const adminLoginBtn = document.getElementById("adminLoginBtn");
+const adminOffBtn = document.getElementById("adminOffBtn");
+const nameInput = document.getElementById("nameInput");
+const idInput = document.getElementById("idInput");
+
+function jsonpRequest(url, params = {}) {
+  return new Promise((resolve, reject) => {
+    const cbName = "cb_" + Date.now();
+    params.callback = cbName;
+    const qs = new URLSearchParams(params).toString();
+    const script = document.createElement("script");
+    script.src = url + "?" + qs;
+
+    window[cbName] = (data) => {
+      resolve(data);
+      delete window[cbName];
+      script.remove();
+    };
+
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+async function fetchItems() {
+  const data = await jsonpRequest(GAS_URL);
+  if (!data.ok) return;
+  items = data.items || [];
+}
+
+function renderTable() {
+  const tbody = document.getElementById("itemTable");
+  tbody.innerHTML = "";
+
+  items.forEach((item, i) => {
+    let row = tbody.insertRow();
+    row.insertCell().textContent = item.row;
+    row.insertCell().textContent = item.name;
+    row.insertCell().textContent = item.number;
+
+    let statusCell = row.insertCell();
+    statusCell.innerHTML =
+      item.status === "available"
+      ? `<span class="status-available">대여가능</span>`
+      : `<span class="status-rented">대여 중</span>`;
+
+    row.insertCell().textContent = adminMode ? item.renter : "";
+    row.insertCell().textContent = adminMode ? item.studentId : "";
+    row.insertCell().textContent = adminMode ? item.rentTime : "";
+    row.insertCell().textContent = adminMode ? item.returnTime : "";
+
+    let btnCell = row.insertCell();
+    let returnBtn = document.createElement("button");
+    returnBtn.textContent = "반납";
+    returnBtn.className = "eon-button";
+    returnBtn.disabled = (item.status === "available") || (!adminMode);
+    btnCell.appendChild(returnBtn);
+  });
+}
+
+async function boot() {
+  applyAuthUI();
+  await fetchItems();
+  renderTable();
+  setInterval(async () => {
+    await fetchItems();
+    renderTable();
+  }, POLL_MS);
+}
+
+boot();
 </script>
 
 </body>
