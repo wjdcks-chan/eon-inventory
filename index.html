@@ -97,12 +97,58 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
 }
 
 /* ===== 대여 시스템 ===== */
-.form-area { margin-top:25px; }
+.form-area {
+  margin-top:25px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.form-left {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
 
 select, input {
   padding:6px;
   margin-right:8px;
   font-size:14px;
+}
+
+/* ===== 문의 창구 (form-area 우측 정렬) ===== */
+.contact-mini {
+  margin-left:auto;
+  text-align:right;
+}
+
+.contact-mini .title {
+  font-size:12px;
+  color:#333;
+  margin:0 0 6px 0;
+  font-weight:bold;
+}
+
+.contact-mini .icons {
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+}
+
+.contact-mini .icons a {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.contact-mini .icons img {
+  width:42px;
+  height:42px;
+  object-fit:contain;
+  display:block;
 }
 
 /* ===== 테이블 ===== */
@@ -159,41 +205,17 @@ th, td {
 
   .banner img { max-height:140px; object-fit:cover; }
 
-  .form-area { display:flex; flex-wrap:wrap; gap:8px; }
-  .form-area select, .form-area input { margin-right:0; flex:1 1 140px; min-width:140px; }
-  .form-area button { margin-right:0; }
-
   th, td { font-size:12px; padding:6px; }
   .status-available, .status-rented { font-size:11px; padding:2px 8px; }
-}
-  /* ===== 문의 창구 ===== */
-.contact-section {
-  margin-top:18px;
-  text-align:center;
-}
 
-.contact-section h3 {
-  font-size:15px;
-  margin-bottom:10px;
-  color:#333;
-}
-
-.contact-buttons {
-  display:flex;
-  justify-content:center;
-  gap:14px;
-  flex-wrap:wrap;
-}
-
-.contact-buttons a img {
-  max-width:120px;
-  height:auto;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.contact-buttons a img:hover {
-  transform:scale(1.05);
+  /* 모바일에서는 문의창구를 아래로 내려 가운데 정렬 */
+  .contact-mini {
+    width:100%;
+    text-align:center;
+  }
+  .contact-mini .icons {
+    justify-content:center;
+  }
 }
 </style>
 </head>
@@ -235,28 +257,31 @@ th, td {
       <p>✓ 원활한 물품 관리를 위해 반납은<strong> 학생회의 확인</strong>이 필요합니다.</p>
       <p>※ 대여물품 재고 현황 조회를 위한 페이지입니다. 대여 및 반납은 <strong>학생회 상주 인원에게 문의</strong>해 주세요.</p>
     </div>
-<!-- ===== 문의 창구 ===== -->
-<div class="contact-section">
-  <h3>문의 창구</h3>
-  <div class="contact-buttons">
-    <a href="https://pf.kakao.com/_Ixfwxon" target="_blank">
-      <img src="kakao.svg" alt="카카오톡 플러스 친구">
-    </a>
-    <a href="https://www.instagram.com/cuk_ns?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">
-      <img src="insta.svg" alt="인스타그램">
-    </a>
-  </div>
-</div>
+
     <!-- ===== 입력 영역 ===== -->
     <div class="form-area">
-      <select id="itemSelect"></select>
-      <select id="numberSelect"></select>
-      <input type="text" id="nameInput" placeholder="이름" maxlength="5">
-      <input type="text" id="idInput" placeholder="학번" maxlength="9">
+      <div class="form-left">
+        <select id="itemSelect"></select>
+        <select id="numberSelect"></select>
+        <input type="text" id="nameInput" placeholder="이름" maxlength="5">
+        <input type="text" id="idInput" placeholder="학번" maxlength="9">
 
-      <button id="rentBtn" class="eon-button" onclick="rentItem()">대여하기</button>
-      <button id="adminLoginBtn" class="eon-button" onclick="adminLogin()">E:ON 접속</button>
-      <button id="adminOffBtn" class="eon-button" onclick="adminOff()">E:ON 오프</button>
+        <button id="rentBtn" class="eon-button" onclick="rentItem()">대여하기</button>
+        <button id="adminLoginBtn" class="eon-button" onclick="adminLogin()">E:ON 접속</button>
+        <button id="adminOffBtn" class="eon-button" onclick="adminOff()">E:ON 오프</button>
+      </div>
+
+      <div class="contact-mini">
+        <div class="title">문의 창구</div>
+        <div class="icons">
+          <a href="https://pf.kakao.com/_Ixfwxon" target="_blank" rel="noopener noreferrer">
+            <img src="kakao.svg" alt="카카오톡 플러스 친구">
+          </a>
+          <a href="https://www.instagram.com/cuk_ns?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer">
+            <img src="insta.svg" alt="인스타그램">
+          </a>
+        </div>
+      </div>
     </div>
 
     <div class="table-wrap">
@@ -573,4 +598,3 @@ boot();
 
 </body>
 </html>
-
