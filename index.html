@@ -8,10 +8,10 @@
 <style>
 body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
 
-.top-section { background:#87CEFA1A; padding:25px 0; }
+.top-section { background:#87CEFA1A; padding:22px 0; } /* (조정) */
 .inner { max-width:1100px; margin:0 auto; padding:0 30px; }
 
-.header-title { position:relative; margin-bottom:10px; }
+.header-title { position:relative; margin-bottom:12px; } /* (조정) */
 .header-title h1 { margin:0; font-size:28px; font-weight:bold; text-align:center; }
 .header-title span {
   position:absolute; right:0; top:50%;
@@ -19,7 +19,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   font-size:13px; color:#666;
 }
 
-.banner { width:100%; margin:10px 0 15px 0; }
+.banner { width:100%; margin:12px 0; } /* (조정) */
 .banner img { width:100%; height:auto; display:block; }
 
 /* ===== 공지 박스 ===== */
@@ -29,7 +29,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   padding:8px 12px;
   font-size:12px;
   line-height:1.3;
-  margin-bottom:10px;
+  margin-bottom:10px; /* (추가) 간격 타이트 */
 }
 .notice-box p { margin:2px 0; }
 
@@ -56,6 +56,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   justify-content:center;
   z-index:9999;
 }
+
 .popup-box {
   background:#ffffff;
   width:420px;
@@ -63,6 +64,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   border-radius:10px;
   text-align:center;
 }
+
 .popup-box button {
   margin-top:25px;
   padding:8px 20px;
@@ -73,9 +75,11 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   cursor:pointer;
 }
 .popup-box button:hover { background:#125ea6; }
+
+/* (유지) 팝업 하단 두 문장 간격 타이트 */
 .popup-box p.tight { margin:2px 0; }
 
-/* ===== 공통 버튼 ===== */
+/* ===== 공통 버튼 스타일 (대여/반납/E:ON) ===== */
 .eon-button {
   padding:7px 12px;
   font-size:13px;
@@ -85,8 +89,8 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   border-radius:6px;
   cursor:pointer;
   transition:0.2s;
-  height:36px;
-  display:flex;
+  height:36px;                 /* (추가) 기준 높이 */
+  display:inline-flex;
   align-items:center;
   justify-content:center;
 }
@@ -97,63 +101,76 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   cursor:not-allowed;
 }
 
-/* ===== 입력 영역 ===== */
+/* ===== 대여 시스템 ===== */
 .form-area {
-  margin-top:5px;
+  margin-top:6px;              /* (조정) */
+  margin-bottom:6px;           /* (추가) 현황판과 간격 타이트 */
   display:flex;
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
 }
 
-/* 입력칸 원래 높이 유지 */
+/* 입력칸 높이 강제 X (원래대로) */
 select, input {
   padding:6px;
+  margin-right:8px;
   font-size:14px;
 }
 
-/* SNS 버튼 우측 정렬 */
-.form-area a:first-of-type {
-  margin-left:auto;
+/* ===== 문의 아이콘 버튼(우측 정렬) ===== */
+.sns-wrap {
+  margin-left:auto;            /* (핵심) 오른쪽 끝으로 */
+  display:flex;
+  align-items:center;
+  gap:8px;
 }
 
 .sns-btn {
   width:36px;
   height:36px;
-  border-radius:6px;
   border:1px solid #ddd;
-  display:flex;
+  background:#fff;
+  border-radius:6px;
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-  background:#fff;
   cursor:pointer;
   transition:0.2s;
 }
+
 .sns-btn img {
   width:20px;
   height:20px;
   object-fit:contain;
+  display:block;
 }
+
 .sns-btn:hover { transform:scale(1.05); }
 
 /* ===== 테이블 ===== */
 .table-wrap {
   width:100%;
   overflow-x:auto;
-  margin-top:10px;
+  -webkit-overflow-scrolling:touch;
+  margin-top:6px;              /* (조정) */
 }
+
 table {
   width:100%;
   min-width:860px;
   border-collapse:collapse;
+  margin-top:0;                /* (조정) */
   font-size:13px;
 }
+
 th, td {
   border:1px solid #ccc;
   padding:6px 8px;
   text-align:center;
   white-space:nowrap;
 }
+
 .status-available {
   background:#1f6f2f;
   color:white;
@@ -161,6 +178,7 @@ th, td {
   border-radius:12px;
   font-size:12px;
 }
+
 .status-rented {
   background:#b00020;
   color:white;
@@ -168,12 +186,39 @@ th, td {
   border-radius:12px;
   font-size:12px;
 }
+
+/* ===== 모바일 대응 ===== */
+@media (max-width: 768px) {
+  .inner { padding:0 14px; }
+  .top-section { padding:18px 0; }
+
+  .header-title h1 { font-size:22px; }
+  .header-title span {
+    position:static;
+    transform:none;
+    display:block;
+    text-align:right;
+    margin-top:6px;
+  }
+
+  .banner img { max-height:140px; object-fit:cover; }
+
+  .form-area { display:flex; flex-wrap:wrap; gap:8px; }
+  .form-area select, .form-area input { margin-right:0; flex:1 1 140px; min-width:140px; }
+  .form-area button { margin-right:0; }
+
+  th, td { font-size:12px; padding:6px; }
+  .status-available, .status-rented { font-size:11px; padding:2px 8px; }
+
+  /* 모바일에서는 아이콘이 줄바꿈될 수 있으니 가운데 정렬 */
+  .sns-wrap { width:100%; justify-content:center; margin-left:0; }
+}
 </style>
 </head>
 
 <body>
 
-<!-- ===== 팝업 ===== -->
+<!-- ===== 팝업 공지 ===== -->
 <div class="popup-overlay" id="popup">
   <div class="popup-box">
     <h2>공지사항</h2>
@@ -187,71 +232,70 @@ th, td {
 </div>
 
 <div class="top-section">
-<div class="inner">
+  <div class="inner">
 
-<div class="header-title">
-<h1>이과대학 대여물품 재고 현황 장부</h1>
-<span id="todayDate"></span>
-</div>
+    <div class="header-title">
+      <h1>이과대학 대여물품 재고 현황 장부</h1>
+      <span id="todayDate"></span>
+    </div>
 
-<div class="banner">
-<img src="eon-banner.jpg" alt="학생회 배너">
-</div>
+    <div class="banner">
+      <img src="eon-banner.jpg" alt="학생회 배너">
+    </div>
 
-<div class="notice-box">
-<p>✓ 물품 대여는 <strong>운영 시간 내에</strong> 가능합니다.
-<button class="time-btn" onclick="openPopup()">운영시간 확인</button></p>
-<p>✓ 물품 반납 또한 <strong>대여 당일 운영 시간 내</strong>에 부탁드립니다.</p>
-<p>✓ 원활한 물품 관리를 위해 반납은<strong> 학생회의 확인</strong>이 필요합니다.</p>
-<p>※ 대여물품 재고 현황 조회를 위한 페이지입니다. 대여 및 반납은 <strong>학생회 상주 인원에게 문의</strong>해 주세요.</p>
-</div>
+    <!-- ===== 공지 박스 ===== -->
+    <div class="notice-box">
+      <p>
+        ✓ 물품 대여는 <strong>운영 시간 내에</strong> 가능합니다.
+        <button class="time-btn" onclick="openPopup()">운영시간 확인</button>
+      </p>
+      <p>✓ 물품 반납 또한 <strong>대여 당일 운영 시간 내</strong>에 부탁드립니다.</p>
+      <p>✓ 원활한 물품 관리를 위해 반납은<strong> 학생회의 확인</strong>이 필요합니다.</p>
+      <p>※ 대여물품 재고 현황 조회를 위한 페이지입니다. 대여 및 반납은 <strong>학생회 상주 인원에게 문의</strong>해 주세요.</p>
+    </div>
 
-<!-- ===== 입력 영역 ===== -->
-<div class="form-area">
+    <!-- ===== 입력 영역 ===== -->
+    <div class="form-area">
+      <select id="itemSelect"></select>
+      <select id="numberSelect"></select>
+      <input type="text" id="nameInput" placeholder="이름" maxlength="5">
+      <input type="text" id="idInput" placeholder="학번" maxlength="9">
 
-<select id="itemSelect"></select>
-<select id="numberSelect"></select>
-<input type="text" id="nameInput" placeholder="이름" maxlength="5">
-<input type="text" id="idInput" placeholder="학번" maxlength="9">
+      <button id="rentBtn" class="eon-button" onclick="rentItem()">대여하기</button>
+      <button id="adminLoginBtn" class="eon-button" onclick="adminLogin()">E:ON 접속</button>
+      <button id="adminOffBtn" class="eon-button" onclick="adminOff()">E:ON 오프</button>
 
-<button id="rentBtn" class="eon-button" onclick="rentItem()">대여하기</button>
-<button id="adminLoginBtn" class="eon-button" onclick="adminLogin()">E:ON 접속</button>
-<button id="adminOffBtn" class="eon-button" onclick="adminOff()">E:ON 오프</button>
+      <!-- (추가) 우측 정렬 아이콘 버튼 -->
+      <div class="sns-wrap">
+        <a href="https://pf.kakao.com/_Ixfwxon" target="_blank" rel="noopener noreferrer" class="sns-btn" aria-label="카카오톡 플러스 친구">
+          <img src="kakao.svg" alt="카카오톡">
+        </a>
+        <a href="https://www.instagram.com/cuk_ns?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank" rel="noopener noreferrer" class="sns-btn" aria-label="인스타그램">
+          <img src="insta.svg" alt="인스타그램">
+        </a>
+      </div>
+    </div>
 
-<a href="https://pf.kakao.com/_Ixfwxon" target="_blank">
-<div class="sns-btn">
-<img src="kakao.svg">
-</div>
-</a>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>번호</th>
+            <th>물품</th>
+            <th>물품번호</th>
+            <th>상태</th>
+            <th>이름</th>
+            <th>학번</th>
+            <th>대여 시간</th>
+            <th>반납 시간</th>
+            <th>반납</th>
+          </tr>
+        </thead>
+        <tbody id="itemTable"></tbody>
+      </table>
+    </div>
 
-<a href="https://www.instagram.com/cuk_ns?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">
-<div class="sns-btn">
-<img src="insta.svg">
-</div>
-</a>
-
-</div>
-
-<div class="table-wrap">
-<table>
-<thead>
-<tr>
-<th>번호</th>
-<th>물품</th>
-<th>물품번호</th>
-<th>상태</th>
-<th>이름</th>
-<th>학번</th>
-<th>대여 시간</th>
-<th>반납 시간</th>
-<th>반납</th>
-</tr>
-</thead>
-<tbody id="itemTable"></tbody>
-</table>
-</div>
-
-</div>
+  </div>
 </div>
 
 <script>
@@ -262,8 +306,286 @@ document.getElementById("todayDate").textContent =
 function openPopup(){ document.getElementById("popup").style.display="flex"; }
 function closePopup(){ document.getElementById("popup").style.display="none"; }
 
-/* ===== 이하 기존 JS 로직 그대로 유지 ===== */
-/* (기존 앱스크립트 연동 코드 그대로 여기에 붙어 있음 — 생략 없음) */
+/* ===== 학생회 권한 모드 ===== */
+let adminMode = false;
+
+function applyAuthUI() {
+  const rentBtn  = document.getElementById("rentBtn");
+  const loginBtn = document.getElementById("adminLoginBtn");
+  const offBtn   = document.getElementById("adminOffBtn");
+
+  rentBtn.disabled  = !adminMode;
+  offBtn.disabled   = !adminMode;   // 접속 전엔 오프도 비활성
+  loginBtn.disabled = adminMode;    // 접속 성공하면 접속 버튼 비활성
+
+  // 입력란도 접속 후에만 사용
+  document.getElementById("nameInput").disabled = !adminMode;
+  document.getElementById("idInput").disabled   = !adminMode;
+  document.getElementById("itemSelect").disabled = !adminMode;
+  document.getElementById("numberSelect").disabled = !adminMode;
+}
+
+function adminLogin() {
+  const pw = prompt("비밀번호를 입력하세요");
+  if (pw === null) return;
+  if (pw === "이온") {
+    adminMode = true;
+    applyAuthUI();
+    renderTable();
+  } else {
+    alert("학생회 임원에게 문의 하세요.");
+  }
+}
+
+function adminOff() {
+  adminMode = false;
+  applyAuthUI();
+  renderTable();
+}
+
+/* ===== JSONP 연동 설정 ===== */
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxV_oRGfPECotB5RCDc871ej5bdxd7T5DT16FybSkfjBCBcXgqi5YFhtHHvW-1omDlGtA/exec";
+const POLL_MS = 5000; // 실시간 반영(폴링)
+
+/* ===== items / inventory는 시트에서 로드 ===== */
+let items = [];
+let inventory = {};
+
+/* 품목 목록이 바뀔 때만 select를 재구성하기 위한 시그니처 */
+let inventoryKeysSig = "";
+
+const itemSelect = document.getElementById("itemSelect");
+const numberSelect = document.getElementById("numberSelect");
+
+/* ===== JSONP 요청 유틸 ===== */
+function jsonpRequest(url, params = {}) {
+  return new Promise((resolve, reject) => {
+    const cbName = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
+    params.callback = cbName;
+
+    const qs = new URLSearchParams(params).toString();
+    const script = document.createElement("script");
+    script.src = url + (url.includes("?") ? "&" : "?") + qs;
+
+    window[cbName] = (data) => {
+      resolve(data);
+      cleanup();
+    };
+
+    script.onerror = () => {
+      reject(new Error("jsonp_failed"));
+      cleanup();
+    };
+
+    function cleanup() {
+      try { delete window[cbName]; } catch (_) { window[cbName] = undefined; }
+      if (script.parentNode) script.parentNode.removeChild(script);
+    }
+
+    document.head.appendChild(script);
+  });
+}
+
+async function fetchItems() {
+  const data = await jsonpRequest(GAS_URL, {});
+  if (!data.ok) throw new Error(data.error || "fetch_failed");
+
+  items = data.items || [];
+
+  // 품목별 수량(inventory) 재구성: number의 최대값을 수량으로 간주
+  inventory = {};
+  items.forEach(it => {
+    const n = Number(it.number);
+    inventory[it.name] = Math.max(inventory[it.name] || 0, n);
+  });
+}
+
+/* ===== 품목 선택 유지 + 목록이 바뀔 때만 재구성 ===== */
+function rebuildItemSelect() {
+  const prevItem = itemSelect.value || "";
+  const prevNumber = numberSelect.value || "";
+
+  const keys = Object.keys(inventory);
+  const sig = keys.join("|");
+
+  // 품목 목록이 동일하면 select를 통째로 재생성하지 않음 (선택 튐 방지)
+  if (sig === inventoryKeysSig && itemSelect.options.length > 0) {
+    updateNumbersPreserve(prevNumber);
+    return;
+  }
+
+  inventoryKeysSig = sig;
+
+  itemSelect.innerHTML = "";
+  keys.forEach(key => {
+    let opt = document.createElement("option");
+    opt.value = key;
+    opt.textContent = key;
+    itemSelect.appendChild(opt);
+  });
+
+  // 이전 선택 복원(가능한 경우)
+  if (prevItem && keys.includes(prevItem)) {
+    itemSelect.value = prevItem;
+  }
+
+  updateNumbersPreserve(prevNumber);
+}
+
+itemSelect.onchange = updateNumbers;
+
+/* ===== 번호 선택도 가능한 경우 유지 ===== */
+function updateNumbersPreserve(prevNumber = "") {
+  numberSelect.innerHTML = "";
+  const selected = itemSelect.value;
+
+  const availableNumbers = items
+    .filter(i => i.name === selected && i.status === "available")
+    .map(i => String(i.number));
+
+  availableNumbers.forEach(numStr => {
+    let opt = document.createElement("option");
+    opt.value = numStr;
+    opt.textContent = numStr + "번";
+    numberSelect.appendChild(opt);
+  });
+
+  // 이전 번호가 아직 available이면 유지
+  if (prevNumber && availableNumbers.includes(String(prevNumber))) {
+    numberSelect.value = String(prevNumber);
+  }
+}
+
+function updateNumbers() {
+  updateNumbersPreserve(numberSelect.value);
+}
+
+/* ===== 대여/반납은 JSONP로 반영 ===== */
+async function postAction(payload) {
+  const data = await jsonpRequest(GAS_URL, payload);
+  if (!data.ok) throw new Error(data.error || "action_failed");
+  items = data.items || items;
+}
+
+function renderTable() {
+  const tbody = document.getElementById("itemTable");
+  tbody.innerHTML = "";
+
+  items.forEach((item, i) => {
+    let row = tbody.insertRow();
+    row.insertCell().textContent = item.row;
+    row.insertCell().textContent = item.name;
+    row.insertCell().textContent = item.number;
+
+    let statusCell = row.insertCell();
+    statusCell.innerHTML =
+      item.status === "available"
+      ? `<span class="status-available">대여가능</span>`
+      : `<span class="status-rented">대여 중</span>`;
+
+    // E:ON 접속 전에는 대여자 정보 숨김
+    row.insertCell().textContent = adminMode ? item.renter : "";
+    row.insertCell().textContent = adminMode ? item.studentId : "";
+    row.insertCell().textContent = adminMode ? item.rentTime : "";
+    row.insertCell().textContent = adminMode ? item.returnTime : "";
+
+    let btnCell = row.insertCell();
+    let returnBtn = document.createElement("button");
+    returnBtn.textContent = "반납";
+    returnBtn.className = "eon-button";
+
+    // E:ON 접속 전엔 반납 불가, available이면 반납 불가
+    returnBtn.disabled = (item.status === "available") || (!adminMode);
+    returnBtn.onclick = () => returnItem(i);
+    btnCell.appendChild(returnBtn);
+  });
+
+  updateNumbers();
+}
+
+async function rentItem() {
+  if (!adminMode) return;
+
+  const name = document.getElementById("nameInput").value;
+  const id   = document.getElementById("idInput").value;
+  const itemName = itemSelect.value;
+  const number = Number(numberSelect.value);
+
+  if(!name || !id) return alert("이름과 학번을 입력하세요.");
+
+  try {
+    await postAction({
+      action: "rent",
+      name: itemName,
+      number: number,
+      renter: name,
+      studentId: id
+    });
+
+    renderTable();
+
+    // 대여 성공 후 입력창 비우기
+    document.getElementById("nameInput").value = "";
+    document.getElementById("idInput").value = "";
+  } catch (e) {
+    alert("처리 실패: " + (e.message || e));
+    try {
+      await fetchItems();
+      rebuildItemSelect();
+      updateNumbers();
+      renderTable();
+    } catch(_) {}
+  }
+}
+
+async function returnItem(idx) {
+  if (!adminMode) return;
+
+  let item = items[idx];
+
+  try {
+    await postAction({
+      action: "return",
+      name: item.name,
+      number: Number(item.number)
+    });
+
+    renderTable();
+  } catch (e) {
+    alert("처리 실패: " + (e.message || e));
+    try {
+      await fetchItems();
+      rebuildItemSelect();
+      updateNumbers();
+      renderTable();
+    } catch(_) {}
+  }
+}
+
+/* ===== 최초 로딩 + 실시간 폴링 ===== */
+async function boot() {
+  applyAuthUI();
+
+  try {
+    await fetchItems();
+    rebuildItemSelect();
+    updateNumbers();
+    renderTable();
+  } catch (e) {
+    console.error(e);
+  }
+
+  setInterval(async () => {
+    try {
+      await fetchItems();
+      rebuildItemSelect();
+      updateNumbers();
+      renderTable();
+    } catch(e) {}
+  }, POLL_MS);
+}
+
+boot();
 </script>
 
 </body>
