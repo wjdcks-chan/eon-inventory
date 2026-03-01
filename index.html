@@ -166,6 +166,35 @@ th, td {
   th, td { font-size:12px; padding:6px; }
   .status-available, .status-rented { font-size:11px; padding:2px 8px; }
 }
+  /* ===== 문의 창구 ===== */
+.contact-section {
+  margin-top:18px;
+  text-align:center;
+}
+
+.contact-section h3 {
+  font-size:15px;
+  margin-bottom:10px;
+  color:#333;
+}
+
+.contact-buttons {
+  display:flex;
+  justify-content:center;
+  gap:14px;
+  flex-wrap:wrap;
+}
+
+.contact-buttons a img {
+  max-width:120px;
+  height:auto;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.contact-buttons a img:hover {
+  transform:scale(1.05);
+}
 </style>
 </head>
 
@@ -206,7 +235,18 @@ th, td {
       <p>✓ 원활한 물품 관리를 위해 반납은<strong> 학생회의 확인</strong>이 필요합니다.</p>
       <p>※ 대여물품 재고 현황 조회를 위한 페이지입니다. 대여 및 반납은 <strong>학생회 상주 인원에게 문의</strong>해 주세요.</p>
     </div>
-
+<!-- ===== 문의 창구 ===== -->
+<div class="contact-section">
+  <h3>문의 창구</h3>
+  <div class="contact-buttons">
+    <a href="https://pf.kakao.com/_Ixfwxon" target="_blank">
+      <img src="kakao.svg" alt="카카오톡 플러스 친구">
+    </a>
+    <a href="https://www.instagram.com/cuk_ns?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==" target="_blank">
+      <img src="insta.svg" alt="인스타그램">
+    </a>
+  </div>
+</div>
     <!-- ===== 입력 영역 ===== -->
     <div class="form-area">
       <select id="itemSelect"></select>
@@ -533,3 +573,4 @@ boot();
 
 </body>
 </html>
+
