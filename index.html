@@ -8,10 +8,10 @@
 <style>
 body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
 
-.top-section { background:#87CEFA1A; padding:22px 0; } /* (조정) */
+.top-section { background:#87CEFA1A; padding:22px 0; }
 .inner { max-width:1100px; margin:0 auto; padding:0 30px; }
 
-.header-title { position:relative; margin-bottom:12px; } /* (조정) */
+.header-title { position:relative; margin-bottom:12px; }
 .header-title h1 { margin:0; font-size:28px; font-weight:bold; text-align:center; }
 .header-title span {
   position:absolute; right:0; top:50%;
@@ -19,7 +19,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   font-size:13px; color:#666;
 }
 
-.banner { width:100%; margin:12px 0; } /* (조정) */
+.banner { width:100%; margin:12px 0; }
 .banner img { width:100%; height:auto; display:block; }
 
 /* ===== 공지 박스 ===== */
@@ -29,7 +29,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   padding:8px 12px;
   font-size:12px;
   line-height:1.3;
-  margin-bottom:10px; /* (추가) 간격 타이트 */
+  margin-bottom:10px;
 }
 .notice-box p { margin:2px 0; }
 
@@ -89,7 +89,7 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
   border-radius:6px;
   cursor:pointer;
   transition:0.2s;
-  height:36px;                 /* (추가) 기준 높이 */
+  height:36px;
   display:inline-flex;
   align-items:center;
   justify-content:center;
@@ -103,8 +103,8 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
 
 /* ===== 대여 시스템 ===== */
 .form-area {
-  margin-top:6px;              /* (조정) */
-  margin-bottom:6px;           /* (추가) 현황판과 간격 타이트 */
+  margin-top:6px;
+  margin-bottom:6px;
   display:flex;
   align-items:center;
   gap:8px;
@@ -120,7 +120,7 @@ select, input {
 
 /* ===== 문의 아이콘 버튼(우측 정렬) ===== */
 .sns-wrap {
-  margin-left:auto;            /* (핵심) 오른쪽 끝으로 */
+  margin-left:auto;
   display:flex;
   align-items:center;
   gap:8px;
@@ -153,14 +153,14 @@ select, input {
   width:100%;
   overflow-x:auto;
   -webkit-overflow-scrolling:touch;
-  margin-top:6px;              /* (조정) */
+  margin-top:6px;
 }
 
 table {
   width:100%;
   min-width:860px;
   border-collapse:collapse;
-  margin-top:0;                /* (조정) */
+  margin-top:0;
   font-size:13px;
 }
 
@@ -203,15 +203,38 @@ th, td {
 
   .banner img { max-height:140px; object-fit:cover; }
 
-  .form-area { display:flex; flex-wrap:wrap; gap:8px; }
-  .form-area select, .form-area input { margin-right:0; flex:1 1 140px; min-width:140px; }
-  .form-area button { margin-right:0; }
+  /* ===== (요구 반영) 모바일에서만 폼 레이아웃 재배치: 대여하기까지 아래로 ===== */
+  .form-area{
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+    align-items:stretch;
+  }
+
+  /* 물품/번호 선택: 1행 좌/우 */
+  #itemSelect   { grid-column: 1 / 2; margin-right:0; width:100%; }
+  #numberSelect { grid-column: 2 / 3; margin-right:0; width:100%; }
+
+  /* 이름/학번: 각각 전체폭(가로폭 동일) */
+  #nameInput { grid-column: 1 / 3; margin-right:0; width:100%; }
+  #idInput   { grid-column: 1 / 3; margin-right:0; width:100%; }
+
+  /* 대여하기: 전체폭으로 내려오기 */
+  #rentBtn { grid-column: 1 / 3; width:100%; }
+
+  /* E:ON 접속/오프: 2칸으로 */
+  #adminLoginBtn { grid-column: 1 / 2; width:100%; }
+  #adminOffBtn   { grid-column: 2 / 3; width:100%; }
+
+  /* 아이콘: 모바일에서는 아래 줄 중앙(PC 영향 없음) */
+  .sns-wrap {
+    grid-column: 1 / 3;
+    margin-left:0;
+    justify-content:center;
+  }
 
   th, td { font-size:12px; padding:6px; }
   .status-available, .status-rented { font-size:11px; padding:2px 8px; }
-
-  /* 모바일에서는 아이콘이 줄바꿈될 수 있으니 가운데 정렬 */
-  .sns-wrap { width:100%; justify-content:center; margin-left:0; }
 }
 </style>
 </head>
@@ -265,7 +288,6 @@ th, td {
       <button id="adminLoginBtn" class="eon-button" onclick="adminLogin()">E:ON 접속</button>
       <button id="adminOffBtn" class="eon-button" onclick="adminOff()">E:ON 오프</button>
 
-      <!-- (추가) 우측 정렬 아이콘 버튼 -->
       <div class="sns-wrap">
         <a href="https://pf.kakao.com/_Ixfwxon" target="_blank" rel="noopener noreferrer" class="sns-btn" aria-label="카카오톡 플러스 친구">
           <img src="kakao.svg" alt="카카오톡">
@@ -343,21 +365,21 @@ function adminOff() {
   renderTable();
 }
 
-/* ===== JSONP 연동 설정 ===== */
+/* ===== (변경) JSONP 연동 설정 ===== */
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxV_oRGfPECotB5RCDc871ej5bdxd7T5DT16FybSkfjBCBcXgqi5YFhtHHvW-1omDlGtA/exec";
 const POLL_MS = 5000; // 실시간 반영(폴링)
 
-/* ===== items / inventory는 시트에서 로드 ===== */
+/* ===== (변경) items / inventory는 시트에서 로드 ===== */
 let items = [];
 let inventory = {};
 
-/* 품목 목록이 바뀔 때만 select를 재구성하기 위한 시그니처 */
+/* (추가) 품목 목록이 바뀔 때만 select를 재구성하기 위한 시그니처 */
 let inventoryKeysSig = "";
 
 const itemSelect = document.getElementById("itemSelect");
 const numberSelect = document.getElementById("numberSelect");
 
-/* ===== JSONP 요청 유틸 ===== */
+/* ===== (추가) JSONP 요청 유틸 ===== */
 function jsonpRequest(url, params = {}) {
   return new Promise((resolve, reject) => {
     const cbName = "cb_" + Date.now() + "_" + Math.floor(Math.random() * 100000);
@@ -400,7 +422,7 @@ async function fetchItems() {
   });
 }
 
-/* ===== 품목 선택 유지 + 목록이 바뀔 때만 재구성 ===== */
+/* ===== (수정) 품목 선택 유지 + 목록이 바뀔 때만 재구성 ===== */
 function rebuildItemSelect() {
   const prevItem = itemSelect.value || "";
   const prevNumber = numberSelect.value || "";
@@ -434,7 +456,7 @@ function rebuildItemSelect() {
 
 itemSelect.onchange = updateNumbers;
 
-/* ===== 번호 선택도 가능한 경우 유지 ===== */
+/* ===== (수정) 번호 선택도 가능한 경우 유지 ===== */
 function updateNumbersPreserve(prevNumber = "") {
   numberSelect.innerHTML = "";
   const selected = itemSelect.value;
@@ -460,7 +482,7 @@ function updateNumbers() {
   updateNumbersPreserve(numberSelect.value);
 }
 
-/* ===== 대여/반납은 JSONP로 반영 ===== */
+/* ===== (변경) 대여/반납은 JSONP로 반영 ===== */
 async function postAction(payload) {
   const data = await jsonpRequest(GAS_URL, payload);
   if (!data.ok) throw new Error(data.error || "action_failed");
@@ -524,7 +546,7 @@ async function rentItem() {
 
     renderTable();
 
-    // 대여 성공 후 입력창 비우기
+    // ✅ 대여 성공 후 입력창 비우기
     document.getElementById("nameInput").value = "";
     document.getElementById("idInput").value = "";
   } catch (e) {
@@ -562,7 +584,7 @@ async function returnItem(idx) {
   }
 }
 
-/* ===== 최초 로딩 + 실시간 폴링 ===== */
+/* ===== (변경) 최초 로딩 + 실시간 폴링 ===== */
 async function boot() {
   applyAuthUI();
 
