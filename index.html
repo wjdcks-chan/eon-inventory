@@ -75,6 +75,9 @@ body { margin:0; font-family:Arial, sans-serif; background:#ffffff; }
 }
 .popup-box button:hover { background:#125ea6; }
 
+/* (추가) 팝업 하단 두 문장 간격 타이트 */
+.popup-box p.tight { margin:2px 0; }
+
 /* ===== 공통 버튼 스타일 (대여/반납/E:ON) ===== */
 .eon-button {
   padding:7px 12px;
@@ -174,9 +177,9 @@ th, td {
     <h2>공지사항</h2>
     <p><strong>물품 대여 시간: 10시 ~ 17시</strong></p>
     <p><strong>반납 가능 시간: 10시 ~ 18시</strong></p>
-    
-    <p><strong>원활한 물품 관리를 위해 반납은 학생회의 확인이 필요합니다.</strong></p>
-    <p><strong>운영 시간을 준수해 주세요.</strong></p>
+    <br>
+    <p class="tight"><strong>원활한 물품 관리를 위해 반납은 학생회의 확인이 필요합니다.</strong></p>
+    <p class="tight"><strong>운영 시간을 준수해 주세요.</strong></p>
     <button onclick="closePopup()">확인</button>
   </div>
 </div>
@@ -530,6 +533,3 @@ boot();
 
 </body>
 </html>
-
-
-
